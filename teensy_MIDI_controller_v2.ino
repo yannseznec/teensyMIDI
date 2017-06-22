@@ -35,34 +35,34 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 const int channel = 1;
 //
 
-int const numPins = 6; //  number of analog inputs for CC
+int const numPins = 0; //  number of analog inputs for CC
 int currentVal[numPins];
 int newVal[numPins];
 int analogPins[] = {  
-  14,15,16,17,18,19   // which analog pins to use
+  15,18,20,21,22,23   // which analog pins to use
 };
 int analogPinsCC[] = {  
   50,51,52,53,54,55   // which CC to use
 };
 
 
-int const numDigPins = 5; // number of digital pins to send note values
+int const numDigPins = 1; // number of digital pins to send note values
 int currentDig[numDigPins];
 int digitalpin[] = {
-  5,6,7,8,9,   // which digital pins to use for sending note values
+  2,7,8,9   // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
-  48,50,51,53,55,60}; // which midi notes to send from the digitalpins pins
+  60,51,53,55,57}; // which midi notes to send from the digitalpins pins
 
 
 
-int const numDigPinsCC = 3; // number of digital pins to send CC (0 or 127)
+int const numDigPinsCC = 0; // number of digital pins to send CC (0 or 127)
 int currentDigCC[numDigPinsCC];
 int digPinsCC[] = {
-   2,3,4 // which digital pins to use for sending CC
+   2,3,4,5 // which digital pins to use for sending CC
 };
 int digitalPinsCC[] = {
-  30,31,32,33,34,35
+  30,31,32,33
 };
 
 
@@ -80,9 +80,16 @@ int touchpin[] = {
 int const numOutputs = 0; // number of pins to use as outputs
 int outs[numOutputs];
 int outPins[] = {
- 10 }; // which digital pins to use as out pins
+ 4,5,6}; // which digital pins to use as out pins
   int outputpitch[] = {
- 48 }; // which midi notes to use for sending the outputs
+ 48,49,50 }; // which midi notes to use for sending the outputs
+
+int const numCCOutputs = 3; // number of pins to use as CC outputs (PWM)
+int outsCC[numCCOutputs];
+int outCCPins[] = {
+ 3,4,6}; // which digital pins to use as out pins
+  int outputCC[] = {
+ 48,49,50 }; // which CC to use for sending the outputs
 
 
 
@@ -93,6 +100,7 @@ void setup() {
   MIDI.begin(4);
   usbMIDI.setHandleNoteOn(OnNoteOn);
   usbMIDI.setHandleNoteOff(OnNoteOff);
+  usbMIDI.setHandleControlChange(OnControlChange);
   for (int i = 0; i < numPins; i++) {
     pinMode(analogPins[i], INPUT_PULLUP);
   }
@@ -112,6 +120,10 @@ void setup() {
   
     for (int i = 0; i < numOutputs; i++) {
     pinMode(outPins[i], OUTPUT);
+  }
+
+      for (int i = 0; i < numCCOutputs; i++) {
+    pinMode(outCCPins[i], OUTPUT);
   }
   
   
@@ -160,13 +172,13 @@ void loop() {
 
   for (int i = 0; i < numDigPinsCC; i++) {
     if (digitalRead(digPinsCC[i]) == 1 && currentDigCC[i] == 0) {
-      usbMIDI.sendControlChange(digitalPinsCC[i], 0, channel); 
-      MIDI.sendControlChange(digitalPinsCC[i], 0, channel); 
+      usbMIDI.sendControlChange(digitalPinsCC[i], 127, channel); 
+      MIDI.sendControlChange(digitalPinsCC[i], 127, channel); 
       currentDigCC[i] = 1;
     }  
     if (digitalRead(digPinsCC[i]) == 0  && currentDigCC[i] == 1) {
-      usbMIDI.sendControlChange(digitalPinsCC[i], 127, channel);
-      MIDI.sendControlChange(digitalPinsCC[i], 127, channel);
+      usbMIDI.sendControlChange(digitalPinsCC[i], 0, channel);
+      MIDI.sendControlChange(digitalPinsCC[i], 0, channel);
       currentDigCC[i] = 0;
     }  
   }
@@ -188,7 +200,7 @@ void loop() {
   
   // i think if you remove these last two lines everything breaks and things are sad and people cry
   while (usbMIDI.read()); // read and discard any incoming MIDI messages
-   delay(5); 
+   delay(25); 
 }
 
  void OnNoteOn(byte channel, byte note, byte velocity) {
@@ -209,7 +221,17 @@ void OnNoteOff(byte channel, byte note, byte velocity) {
   }
 }
 
+ void OnControlChange(byte channel, byte control, byte value) {
 
+   for (int i = 0; i < numCCOutputs; i++) {
+     
+     if (control == outputCC[i]) {
+      analogWrite(outCCPins[i], map(value,0,127,255,0));
+    
+     }
+  }
+     
+}
 
 
 
