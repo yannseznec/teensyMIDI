@@ -18,6 +18,7 @@ new things:
 - added outputs for controlling things via midi - send midi signals to the Teensy to
 controls lights or motors or what have you
 - regular MIDI support in addition to USB MIDI (not fully tested but should work)
+- added support for things that need calibration to 0 on startup (light sensors, string sensors, etc)
 
 TODO:
 - add pitch wheel support somehow? 
@@ -35,34 +36,44 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 const int channel = 1;
 //
 
-int const numPins = 0; //  number of analog inputs for CC
+int const numPins = 6; //  number of analog inputs for CC
 int currentVal[numPins];
 int newVal[numPins];
 int analogPins[] = {  
-  15,18,20,21,22,23   // which analog pins to use
+  20,21,22,23,24,25   // which analog pins to use
 };
 int analogPinsCC[] = {  
-  50,51,52,53,54,55   // which CC to use
+  2,3,4,5,6,7   // which CC to use
+};
+// STRING CONTROLLER OR OTHER THING THAT NEEDS CALIBRATION ON STARTUP
+int const numStringPins = 2; //  number of analog inputs 
+int currentStringVal[numStringPins];
+int newStringVal[numStringPins];
+int newStringValCal[numStringPins];
+int analogStringPins[] = {  
+  15,18   // which analog pins to use 
+};
+int analogStringPinsCC[] = {  
+  1,8   // which CC to use
 };
 
-
-int const numDigPins = 1; // number of digital pins to send note values
+int const numDigPins = 4; // number of digital pins to send note values
 int currentDig[numDigPins];
 int digitalpin[] = {
-  2,7,8,9   // which digital pins to use for sending note values
+  6,7,8,9   // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
-  60,51,53,55,57}; // which midi notes to send from the digitalpins pins
+  57,55,53,51}; // which midi notes to send from the digitalpins pins
 
 
 
-int const numDigPinsCC = 0; // number of digital pins to send CC (0 or 127)
+int const numDigPinsCC = 4; // number of digital pins to send CC (0 or 127)
 int currentDigCC[numDigPinsCC];
 int digPinsCC[] = {
    2,3,4,5 // which digital pins to use for sending CC
 };
 int digitalPinsCC[] = {
-  30,31,32,33
+  50,51,52,53
 };
 
 
@@ -80,11 +91,11 @@ int touchpin[] = {
 int const numOutputs = 0; // number of pins to use as outputs
 int outs[numOutputs];
 int outPins[] = {
- 4,5,6}; // which digital pins to use as out pins
+ 27,0,1,2,4,5,6}; // which digital pins to use as out pins
   int outputpitch[] = {
- 48,49,50 }; // which midi notes to use for sending the outputs
+ 60,61,62,63,64,65,66 }; // which midi notes to use for sending the outputs
 
-int const numCCOutputs = 3; // number of pins to use as CC outputs (PWM)
+int const numCCOutputs = 0; // number of pins to use as CC outputs (PWM)
 int outsCC[numCCOutputs];
 int outCCPins[] = {
  3,4,6}; // which digital pins to use as out pins
@@ -103,6 +114,10 @@ void setup() {
   usbMIDI.setHandleControlChange(OnControlChange);
   for (int i = 0; i < numPins; i++) {
     pinMode(analogPins[i], INPUT_PULLUP);
+  }
+    for (int i = 0; i < numStringPins; i++) {
+    pinMode(analogStringPins[i], INPUT_PULLUP);
+    newStringValCal[i] = analogRead(analogStringPins[i]);
   }
   
     for (int i = 0; i < numDigPins; i++) {
@@ -196,7 +211,24 @@ void loop() {
     }  
   }
   
-// output
+// string controllers
+  for (int i = 0; i < numStringPins; i++) {
+
+    newStringVal[i] = analogRead(analogStringPins[i]);
+    
+
+    if (abs(newStringVal[i] - currentStringVal[i])>3) {
+   // original code:
+   //   usbMIDI.sendControlChange(i+1, newVal[i]>>3, channel); 
+   //   currentVal[i] = newVal[i];
+   // new code:
+   int calibratedValue = constrain(map(newStringVal[i], newStringValCal[i], 1023, -1, 127),0,127);
+   usbMIDI.sendControlChange(analogStringPinsCC[i], calibratedValue, channel); 
+      currentStringVal[i] = newStringVal[i];
+    }
+
+//      Serial.println(calibratedValue);
+  }
   
   // i think if you remove these last two lines everything breaks and things are sad and people cry
   while (usbMIDI.read()); // read and discard any incoming MIDI messages
@@ -207,7 +239,7 @@ void loop() {
    for (int i = 0; i < numOutputs; i++) {
      
      if (note == outputpitch[i]) {
-      digitalWrite(outPins[i], LOW);
+      digitalWrite(outPins[i], HIGH);
      }
   }
      
@@ -216,7 +248,7 @@ void loop() {
 void OnNoteOff(byte channel, byte note, byte velocity) {
    for (int i = 0; i < numOutputs; i++) {
       if (note == outputpitch[i]) {
-      digitalWrite(outPins[i], HIGH);
+      digitalWrite(outPins[i], LOW);
       }
   }
 }
