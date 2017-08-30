@@ -33,20 +33,20 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 
 #include <MIDI.h>
 // the MIDI channel number to send messages
-const int channel = 1;
+const int channel = 2;
 //
 
-int const numPins = 6; //  number of analog inputs for CC
+int const numPins = 4; //  number of analog inputs for CC
 int currentVal[numPins];
 int newVal[numPins];
 int analogPins[] = {  
-  20,21,22,23,24,25   // which analog pins to use
+  14,15,16,17   // which analog pins to use
 };
 int analogPinsCC[] = {  
-  2,3,4,5,6,7   // which CC to use
+  15,16,17,18   // which CC to use
 };
 // STRING CONTROLLER OR OTHER THING THAT NEEDS CALIBRATION ON STARTUP
-int const numStringPins = 2; //  number of analog inputs 
+int const numStringPins = 0; //  number of analog inputs 
 int currentStringVal[numStringPins];
 int newStringVal[numStringPins];
 int newStringValCal[numStringPins];
@@ -60,17 +60,17 @@ int analogStringPinsCC[] = {
 int const numDigPins = 4; // number of digital pins to send note values
 int currentDig[numDigPins];
 int digitalpin[] = {
-  6,7,8,9   // which digital pins to use for sending note values
+  4,5,6,7  // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
-  57,55,53,51}; // which midi notes to send from the digitalpins pins
+  48,50,52,54}; // which midi notes to send from the digitalpins pins
 
 
 
 int const numDigPinsCC = 4; // number of digital pins to send CC (0 or 127)
 int currentDigCC[numDigPinsCC];
 int digPinsCC[] = {
-   2,3,4,5 // which digital pins to use for sending CC
+   2,3,8,9 // which digital pins to use for sending CC
 };
 int digitalPinsCC[] = {
   50,51,52,53
@@ -205,8 +205,12 @@ void loop() {
     newVal[i] = analogRead(analogPins[i]);
 
     if (abs(newVal[i] - currentVal[i])>3) {
+//normal
       usbMIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
       MIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
+ //use this if the wiring is backwards :\  
+ //     usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
+ //     MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
       currentVal[i] = newVal[i];
     }  
   }
