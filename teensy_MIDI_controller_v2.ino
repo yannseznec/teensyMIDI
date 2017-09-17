@@ -33,44 +33,44 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 
 #include <MIDI.h>
 // the MIDI channel number to send messages
-const int channel = 2;
+const int channel = 1;
 //
 
-int const numPins = 4; //  number of analog inputs for CC
+int const numPins = 6; //  number of analog inputs for CC
 int currentVal[numPins];
 int newVal[numPins];
 int analogPins[] = {  
-  14,15,16,17   // which analog pins to use
+  18,19,20,21,22,23   // which analog pins to use
 };
 int analogPinsCC[] = {  
-  15,16,17,18   // which CC to use
+  2,3,4,5,6,7   // which CC to use
 };
 // STRING CONTROLLER OR OTHER THING THAT NEEDS CALIBRATION ON STARTUP
-int const numStringPins = 0; //  number of analog inputs 
+int const numStringPins = 1; //  number of analog inputs 
 int currentStringVal[numStringPins];
 int newStringVal[numStringPins];
 int newStringValCal[numStringPins];
 int analogStringPins[] = {  
-  15,18   // which analog pins to use 
+  14   // which analog pins to use 
 };
 int analogStringPinsCC[] = {  
-  1,8   // which CC to use
+  1   // which CC to use
 };
 
-int const numDigPins = 4; // number of digital pins to send note values
+int const numDigPins = 6; // number of digital pins to send note values
 int currentDig[numDigPins];
 int digitalpin[] = {
-  4,5,6,7  // which digital pins to use for sending note values
+  2,3,4,5,6,7  // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
-  48,50,52,54}; // which midi notes to send from the digitalpins pins
+  48,50,51,53,55,57}; // which midi notes to send from the digitalpins pins
 
 
 
 int const numDigPinsCC = 4; // number of digital pins to send CC (0 or 127)
 int currentDigCC[numDigPinsCC];
 int digPinsCC[] = {
-   2,3,8,9 // which digital pins to use for sending CC
+   8,9,10,11 // which digital pins to use for sending CC
 };
 int digitalPinsCC[] = {
   50,51,52,53
