@@ -105,6 +105,12 @@ int outCCPins[] = {
  48,49,50,51 }; // which CC to use for sending the outputs
 
 
+//Niall addition:
+/// Filter variables for the CC outputs.
+float ccFilter[] = {64.0, 64.0, 64.0, 64.0, 64.0, 64.0, 64.0, 64.0, 64.0, 64.0};
+/// Previous CC values sent (so we only send CC messages when the value has changed.
+int ccLast[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 
  #include <MIDI.h>
 
@@ -205,8 +211,23 @@ void loop() {
 // analog pins
 
   for (int i = 0; i < numPins; i++) {
+    int val = analogRead(analogPins[i]);
+    float tempf = (float)(val/8.0);
 
-    newVal[i] = analogRead(analogPins[i]);
+    //Low-pass filter the value.
+    tempf = ccFilter[i] + ((tempf - ccFilter[i]) * 0.1);
+    ccFilter[i] = (int)tempf;
+    val = (int)tempf;
+
+    //Only send a value when it's actually changed.
+    if(val != ccLast[i])
+    {
+        usbMIDI.sendControlChange(analogPinsCC[i], val, channel);
+        MIDI.sendControlChange(analogPinsCC[i], val, channel);
+
+        ccLast[i] = val;
+    }
+   /* newVal[i] = analogRead(analogPins[i]);
 
     if (abs(newVal[i] - currentVal[i])>3) {
 //normal
@@ -216,8 +237,8 @@ void loop() {
       usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
       MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
  */
-      currentVal[i] = newVal[i];
-    }  
+      /*currentVal[i] = newVal[i];
+    }  */
   }
   
 // string controllers
