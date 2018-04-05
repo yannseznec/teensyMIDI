@@ -1,5 +1,5 @@
 /* some code designed for using the Teensy 3 as a USB MIDI controller
-v2.0, 16 May 2017
+v2.0.1, 5 April 2018
 by Yann Seznec www.yannseznec.com
 
 no copyright or anything, use however you want
@@ -32,18 +32,20 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 */
 
 #include <MIDI.h>
+
+
 // the MIDI channel number to send messages
-const int channel = 2;
+const int channel = 1;
 //
 
-int const numPins = 4; //  number of analog inputs for CC
+int const numPins = 10; //  number of analog inputs for CC
 int currentVal[numPins];
 int newVal[numPins];
 int analogPins[] = {  
-  14,15,16,17   // which analog pins to use
+  14,15,16,17,18,19,20,21,22,23   // which analog pins to use
 };
 int analogPinsCC[] = {  
-  15,16,17,18   // which CC to use
+  10,11,12,13,14,15,16,17,18,19   // which CC to use
 };
 // STRING CONTROLLER OR OTHER THING THAT NEEDS CALIBRATION ON STARTUP
 int const numStringPins = 0; //  number of analog inputs 
@@ -51,26 +53,26 @@ int currentStringVal[numStringPins];
 int newStringVal[numStringPins];
 int newStringValCal[numStringPins];
 int analogStringPins[] = {  
-  15,18   // which analog pins to use 
+  A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11   // which analog pins to use 
 };
 int analogStringPinsCC[] = {  
-  1,8   // which CC to use
+  30,31,32,33,34,35,36,37,38,39,40,41   // which CC to use
 };
 
-int const numDigPins = 4; // number of digital pins to send note values
+int const numDigPins = 13; // number of digital pins to send note values
 int currentDig[numDigPins];
 int digitalpin[] = {
-  4,5,6,7  // which digital pins to use for sending note values
+  0,1,2,3,4,5,6,7,8,9,10,11,12  // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
-  48,50,52,54}; // which midi notes to send from the digitalpins pins
+  60,61,62,63,64,65,66,67,68,69,70,71,72}; // which midi notes to send from the digitalpins pins
 
 
 
-int const numDigPinsCC = 4; // number of digital pins to send CC (0 or 127)
+int const numDigPinsCC = 0; // number of digital pins to send CC (0 or 127)
 int currentDigCC[numDigPinsCC];
 int digPinsCC[] = {
-   2,3,8,9 // which digital pins to use for sending CC
+   8,9,10,11 // which digital pins to use for sending CC
 };
 int digitalPinsCC[] = {
   50,51,52,53
@@ -91,20 +93,22 @@ int touchpin[] = {
 int const numOutputs = 0; // number of pins to use as outputs
 int outs[numOutputs];
 int outPins[] = {
- 27,0,1,2,4,5,6}; // which digital pins to use as out pins
+ 13,14,15,16}; // which digital pins to use as out pins
   int outputpitch[] = {
- 60,61,62,63,64,65,66 }; // which midi notes to use for sending the outputs
+ 48,49,50,51 }; // which midi notes to use for sending the outputs
 
 int const numCCOutputs = 0; // number of pins to use as CC outputs (PWM)
 int outsCC[numCCOutputs];
 int outCCPins[] = {
- 3,4,6}; // which digital pins to use as out pins
+ 13,14,15,16}; // which digital pins to use as out pins
   int outputCC[] = {
- 48,49,50 }; // which CC to use for sending the outputs
+ 48,49,50,51 }; // which CC to use for sending the outputs
 
 
 
+ #include <MIDI.h>
 
+ // Created and binds the MIDI interface to the default hardware Serial port
 
 
 void setup() {
@@ -208,9 +212,10 @@ void loop() {
 //normal
       usbMIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
       MIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
- //use this if the wiring is backwards :\  
- //     usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
- //     MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
+ /* use this if the wiring is backwards :\  
+      usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
+      MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
+ */
       currentVal[i] = newVal[i];
     }  
   }
@@ -236,7 +241,7 @@ void loop() {
   
   // i think if you remove these last two lines everything breaks and things are sad and people cry
   while (usbMIDI.read()); // read and discard any incoming MIDI messages
-   delay(25); 
+ //  delay(5); 
 }
 
  void OnNoteOn(byte channel, byte note, byte velocity) {
