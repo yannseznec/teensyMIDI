@@ -91,7 +91,10 @@ int outCCPins[] = {
   int outputCC[] = {
  48,49,50,51 }; // which CC to use for sending the outputs
 
-
+// Serial stuff
+  String analogInput[] = {
+  "analog0 ", "analog1 ", "analog2 ", "analog3 ", "analog4 ", "analog5 ", "analog6 ", "analog7 ", "analog8 ", "analog9 ", "analog10 ", "analog11 ", "analog12 ",
+}; // yes this is clunky but hey ho
 
 // the MIDI channel number to send messages
 const int channel = 5;
@@ -219,10 +222,13 @@ Serial.println(touch[0]);
       usbMIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
   //    usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i], 680, 800, 0, 127), channel); //ONLY FOR THE WEIRD THING
     //  MIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
- // use this if the wiring is backwards :\  
+ // use this if the wiring is backwards 
    //   usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
  //     MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
- Serial.println(analogRead(analogPins[0]));
+    Serial.print(analogInput[i]);
+    Serial.print(analogRead(analogPins[i]));
+    Serial.print(" ");
+    Serial.println(0);
  
       currentVal[i] = newVal[i];
     }  
