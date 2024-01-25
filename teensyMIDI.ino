@@ -1,11 +1,13 @@
 /* some code designed for using the Teensy 3 as a USB MIDI controller
-v2.0.3, 12 April 2019
+v2.1, 25 January 2024
 by Yann Seznec www.yannseznec.com
 no copyright or anything, use however you want
 
-
 remember to select MIDI as your USB Type in the Tools menu
 this should also work with other Teensy boards, apart from the "touch" pins
+
+Otherwise, go through the "variables that are useful to change" section and change the values to what you want.
+
 things that are kind of dumb in this code:
 - the touch threshold is hard coded (int touchThreshold)
 - touch pins only send midi note on/off with no velocity change
@@ -18,7 +20,7 @@ controls lights or motors or what have you
 - added support for things that need calibration to 0 on startup (light sensors, string sensors, etc)
 TODO:
 - add pitch wheel support somehow? 
-- touch pin CC 
+- touch pin CC, maybe, but this is probably a pain
 NOTES:
 If you want to use regular MIDI using din connectors, uncomment all the MIDI lines and keep the Rx and Tx pins free. On Teensy LC
 and Teensy 3 (and up) these are pins 0 and 1.
@@ -28,80 +30,92 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 
 // #include <MIDI.h>
 
+// VARIABLES THAT ARE USEFUL TO CHANGE
 
-// the MIDI channel number to send messages
-const int channel = 1;
-//
-
-int const numPins = 0; //  number of analog inputs for CC
-int currentVal[numPins];
-int newVal[numPins];
+// ANALOG INPUTS to MIDI CC
+int const numPins = 3; //  number of analog inputs for CC
 int analogPins[] = {  
-  15,16,17   // which analog pins to use
+  14,15,16,22,23,24,25   // which analog pins to use
 };
 int analogPinsCC[] = {  
-  51,52,53   // which CC to use
+  50,51,52,53,54,55   // which CC to use
 };
 
-// STRING CONTROLLER OR OTHER THING THAT NEEDS CALIBRATION ON STARTUP
-int const numStringPins = 0; //  number of analog inputs 
-int currentStringVal[numStringPins];
-int newStringVal[numStringPins];
-int newStringValCal[numStringPins];
+// ANALOG INPUTS to MIDI CC WITH STARTUP CALIBRATION
+int const numStringPins = 0; //  number of analog inputs for startup calibration to 0
 int analogStringPins[] = {  
-  14,15,16,17   // which analog pins to use 
+  14,18   // which analog pins to use for startup calibration to 0
 };
 int analogStringPinsCC[] = {  
-  50,31,32,33,34,35,36,37,38,39,40,41   // which CC to use
+  50,41   // which CC to use for startup calibration to 0
 };
 
-int const numDigPins = 0; // number of digital pins to send note values
-int currentDig[numDigPins];
+
+// DIGITAL INPUTS TO MIDI NOTE
+int const numDigPins = 7; // number of digital pins to send note values
 int digitalpin[] = {
-  0,2,3,4,5,6,7,8,9,10,11,12  // which digital pins to use for sending note values
+ 2,3,4,5,6,7,8  // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
-  46,48,51,53,67,68,69,70,71,72 // which midi notes to send from the digitalpins pins
+  60,61,62,63,64,65,66 // which midi notes to send from the digitalpins pins
   }; 
 
-
-
+// DIGITAL INPUT TO MIDI CC
 int const numDigPinsCC = 0; // number of digital pins to send CC (0 or 127)
-int currentDigCC[numDigPinsCC];
 int digPinsCC[] = {
-   2 // which digital pins to use for sending CC
+   2,3,4,5 // which digital pins to use for sending CC
 };
 int digitalPinsCC[] = {
-  50,51,52,53
+  72,74,76,78
 };
 
 
-
+// TEENSY TOUCH PINS TO MIDI NOTE
 int const numTouchPins = 0; // number of pins to use as touchpins, sending note values
-int touch[numTouchPins];
-int touchon[numTouchPins];
 int touchpin[] = {
   4,0,1}; // which digital pins to use as touch pins
   int touchpitch[] = {
 70,71,73,74  }; // which midi notes to send from the touch pins
-  int touchThreshold = 2000;
-  int touchMax = 7000; 
-  
-int const numOutputs = 0; // number of pins to use as outputs
-int outs[numOutputs];
+
+// DIGITAL OUTPUTS FROM MIDI NOTES
+int const numOutputs = 1; // number of pins to use as outputs
 int outPins[] = {
- 2,3,4,13,14,15,16,17,8}; // which digital pins to use as out pins
+ 12,14,4,5,6,7,8,9}; // which digital pins to use as out pins
   int outputpitch[] = {
  60,61,62,63,64,65,66,67,72}; // which midi notes to use for sending the outputs
 
+// PWM OUTPUTS FROM MIDI CC
 int const numCCOutputs = 0; // number of pins to use as CC outputs (PWM)
-int outsCC[numCCOutputs];
 int outCCPins[] = {
- 13,14,15,16}; // which digital pins to use as out pins
+ 15,14,15,16}; // which digital pins to use as out pins
   int outputCC[] = {
  48,49,50,51 }; // which CC to use for sending the outputs
 
 
+
+// the MIDI channel number to send messages
+const int channel = 5;
+//
+// analog pins
+int currentVal[numPins];
+int newVal[numPins];
+// STRING CONTROLLER OR OTHER THING THAT NEEDS CALIBRATION ON STARTUP
+int currentStringVal[numStringPins];
+int newStringVal[numStringPins];
+int newStringValCal[numStringPins];
+// digital pins
+int currentDig[numDigPins];
+// digital pins CC
+int currentDigCC[numDigPinsCC];
+// touch pins (might be useful to adjust these threshold/max parameters)
+int touch[numTouchPins];
+int touchon[numTouchPins];
+  int touchThreshold = 2000;
+  int touchMax = 7000; 
+// outputs from midi notes
+int outs[numOutputs];
+// outputs from CC
+int outsCC[numCCOutputs];
 
 
 
@@ -142,16 +156,11 @@ void setup() {
       for (int i = 0; i < numCCOutputs; i++) {
     pinMode(outCCPins[i], OUTPUT);
   }
-  
-  
-
-
   Serial.begin(38400);
 
 }
 
 void loop() {
-
 //  touchpads COMMENT OUT IF USING TEENSY++ or TEENSY 2
   for (int i = 0; i < numTouchPins; i++) {
    touch[i] = touchRead(touchpin[i]); 
@@ -169,7 +178,6 @@ Serial.println(touch[0]);
 
   }
 
- 
 
 // digital pins sending notes
   for (int i = 0; i < numDigPins; i++) {
@@ -209,10 +217,12 @@ Serial.println(touch[0]);
     if (abs(newVal[i] - currentVal[i])>3) {
 //normal
       usbMIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
-  //    MIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
+  //    usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i], 680, 800, 0, 127), channel); //ONLY FOR THE WEIRD THING
+    //  MIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
  // use this if the wiring is backwards :\  
    //   usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
  //     MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
+ Serial.println(analogRead(analogPins[0]));
  
       currentVal[i] = newVal[i];
     }  
