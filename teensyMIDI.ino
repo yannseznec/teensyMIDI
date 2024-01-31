@@ -33,12 +33,12 @@ https://www.pjrc.com/teensy/td_libs_MIDI.html
 // VARIABLES THAT ARE USEFUL TO CHANGE
 
 // ANALOG INPUTS to MIDI CC
-int const numPins = 3; //  number of analog inputs for CC
+int const numPins = 8; //  number of analog inputs for CC
 int analogPins[] = {  
-  14,15,16,22,23,24,25   // which analog pins to use
+  14,15,16,17,18,19,20,21   // which analog pins to use
 };
 int analogPinsCC[] = {  
-  50,51,52,53,54,55   // which CC to use
+  50,51,52,53,54,55,56,57   // which CC to use
 };
 
 // ANALOG INPUTS to MIDI CC WITH STARTUP CALIBRATION
@@ -52,9 +52,9 @@ int analogStringPinsCC[] = {
 
 
 // DIGITAL INPUTS TO MIDI NOTE
-int const numDigPins = 7; // number of digital pins to send note values
+int const numDigPins = 5; // number of digital pins to send note values
 int digitalpin[] = {
- 2,3,4,5,6,7,8  // which digital pins to use for sending note values
+ 0,1,2,3,4,5,6,7,8  // which digital pins to use for sending note values
 };
 int digitalpitch[] = {
   60,61,62,63,64,65,66 // which midi notes to send from the digitalpins pins
@@ -78,7 +78,7 @@ int touchpin[] = {
 70,71,73,74  }; // which midi notes to send from the touch pins
 
 // DIGITAL OUTPUTS FROM MIDI NOTES
-int const numOutputs = 1; // number of pins to use as outputs
+int const numOutputs = 0; // number of pins to use as outputs
 int outPins[] = {
  12,14,4,5,6,7,8,9}; // which digital pins to use as out pins
   int outputpitch[] = {
@@ -95,6 +95,9 @@ int outCCPins[] = {
   String analogInput[] = {
   "analog0 ", "analog1 ", "analog2 ", "analog3 ", "analog4 ", "analog5 ", "analog6 ", "analog7 ", "analog8 ", "analog9 ", "analog10 ", "analog11 ", "analog12 ",
 }; // yes this is clunky but hey ho
+  String digitalInput[] = {
+  "digital0 ", "digital1 ", "digital2 ", "digital3 ", "digital4 ", "digital5 ", "digital6 ", "digital7 ", "digital8 ", "adigital9 ", "digital10 ", "digital11 ", "digital12 ",
+}; // yes this is also clunky
 
 // the MIDI channel number to send messages
 const int channel = 5;
@@ -187,11 +190,19 @@ Serial.println(touch[0]);
     if (digitalRead(digitalpin[i]) == 1 && currentDig[i] == 0) {
       usbMIDI.sendNoteOff(digitalpitch[i], 100, channel); 
   //    MIDI.sendNoteOff(digitalpitch[i], 100, channel); 
+    Serial.print(digitalInput[i]);
+    Serial.print(0);
+    Serial.print(" ");
+    Serial.println(0);
       currentDig[i] = 1;
     }  
     if (digitalRead(digitalpin[i]) == 0  && currentDig[i] == 1) {
       usbMIDI.sendNoteOn(digitalpitch[i], 100, channel);
     //  MIDI.sendNoteOn(digitalpitch[i], 100, channel);
+      Serial.print(digitalInput[i]);
+      Serial.print(1);
+      Serial.print(" ");
+      Serial.println(0);
       currentDig[i] = 0;
     }  
   }
