@@ -227,8 +227,13 @@ Serial.println(touch[0]);
   for (int i = 0; i < numPins; i++) {
 
     newVal[i] = analogRead(analogPins[i]);
+        Serial.print(analogInput[i]);
+    Serial.print(analogRead(analogPins[i]));
+    Serial.print(" ");
+    Serial.println(0);
+ 
 
-    if (abs(newVal[i] - currentVal[i])>3) {
+    if (abs(newVal[i] - currentVal[i])>3) { // 
 //normal
       usbMIDI.sendControlChange(analogPinsCC[i], newVal[i]>>3, channel); 
   //    usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i], 680, 800, 0, 127), channel); //ONLY FOR THE WEIRD THING
@@ -236,11 +241,7 @@ Serial.println(touch[0]);
  // use this if the wiring is backwards 
    //   usbMIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
  //     MIDI.sendControlChange(analogPinsCC[i], map(newVal[i]>>3,0,127,127,0), channel); 
-    Serial.print(analogInput[i]);
-    Serial.print(analogRead(analogPins[i]));
-    Serial.print(" ");
-    Serial.println(0);
- 
+
       currentVal[i] = newVal[i];
     }  
   }
